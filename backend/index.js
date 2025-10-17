@@ -20,10 +20,13 @@ connectDB();
 app.use(express.json());
 app.use(cors());
 
+app.get('/', (req, res) => {
+  res.send("Connected to ClientIntel server")
+})
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/llm', authenticateToken, llmRoutes);
 
-app.listen(port, '0.0.0.0', () => {
+app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
