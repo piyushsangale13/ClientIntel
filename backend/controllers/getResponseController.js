@@ -9,10 +9,11 @@ const openai = new AzureOpenAI({
     apiVersion: '2025-04-01-preview',
 });
 
-const TOKEN_COUNT_FILE = path.join(__dirname, '../tokenCount.txt');
+const TOKEN_COUNT_FILE = path.join(__dirname, './tokenCount.txt');
+
 const getResponse = async (req, res) => {
     const { prompt } = req.body;
-
+    console.log(prompt);
     try {
         const result = await openai.chat.completions.create({
             model: 'gpt-5-mini',
@@ -26,11 +27,9 @@ const getResponse = async (req, res) => {
                 const fileData = fs.readFileSync(TOKEN_COUNT_FILE, 'utf8');
                 currentTotal = parseInt(fileData, 10) || 0;
             } catch (err) {
-                // If file doesn't exist or is unreadable, assume 0
                 console.warn('Could not read tokenCount.txt, starting at 0');
             }
 
-            // Step 2: Update and write new total
             const newTotal = currentTotal + tokenUsed;
             fs.writeFileSync(TOKEN_COUNT_FILE, newTotal.toString(), 'utf8');
 
@@ -38,9 +37,7 @@ const getResponse = async (req, res) => {
         } else {
             res.status(404).json({ message: 'Error' });
         }
-        // console.log(result.choices[0]?.message?.content);
     } catch (err) {
-        // console.error('OpenAI error:', err);
         res.status(404).json({ message: 'OpenAI error:' });
     }
 }
