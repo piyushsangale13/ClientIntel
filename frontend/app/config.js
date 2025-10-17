@@ -1,3 +1,3 @@
 export default {
-    "BACKEND_API_URL" : "http://localhost:5000"
+    "BACKEND_API_URL" : "http://192.168.1.8:5000"
 }

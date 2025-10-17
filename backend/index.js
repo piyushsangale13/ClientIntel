@@ -24,6 +24,6 @@ app.use(cors());
 app.use('/api/auth', authRoutes);
 app.use('/api/llm', authenticateToken, llmRoutes);
 
-app.listen(port, () => {
+app.listen(port, '0.0.0.0', () => {
   console.log(`Server running at http://localhost:${port}`);
 });

@@ -4,88 +4,80 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
+  Alert,
 } from "react-native";
-import { saveToken } from "./utils/Auth"; // Adjust path as needed
-
-export default function LoginScreen({ navigation }) {
+import { router } from "expo-router";
+import { login } from "./utils/Auth";
+import { StatusBar } from 'expo-status-bar';
+export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert("Missing fields", "Please enter email and password");
+      Alert.alert("Error", "Enter email and password");
       return;
     }
 
     setLoading(true);
     try {
-      const res = await fetch("http://<YOUR_BACKEND_URL>/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        await saveToken(data.token); // Save JWT securely
-        Alert.alert("Welcome!", "Login successful!");
-        navigation.replace("Home"); // Replace with your home screen
+      const res = await login(email, password);
+      if (res?.status) {
+        Alert.alert("Success", "Login successful!");
+        router.replace("/(tabs)/ProfileScreen");
       } else {
-        Alert.alert("Error", data.message || "Invalid credentials");
+        Alert.alert("Error", res?.message || "Invalid credentials");
       }
-    } catch (err) {
-      Alert.alert("Network Error", "Please try again later");
+    } catch {
+      Alert.alert("Error", "Network error");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <View className="flex-1 justify-center bg-white px-6">
-      <Text className="text-3xl font-bold text-center mb-8 text-gray-800">
-        Welcome Back
-      </Text>
+    <>
+      <StatusBar style="dark" />
+      <View className="flex-1 justify-center bg-white px-6">
+        <Text className="text-3xl font-bold text-center mb-8">Login</Text>
 
-      <TextInput
-        className="border border-gray-300 rounded-2xl px-4 py-3 mb-4 text-base"
-        placeholder="Email"
-        keyboardType="email-address"
-        autoCapitalize="none"
-        value={email}
-        onChangeText={setEmail}
-      />
+        <TextInput
+          className="border border-gray-300 rounded-2xl px-4 py-3 mb-4"
+          placeholder="Email"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+        />
+        <TextInput
+          className="border border-gray-300 rounded-2xl px-4 py-3 mb-6"
+          placeholder="Password"
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+        />
 
-      <TextInput
-        className="border border-gray-300 rounded-2xl px-4 py-3 mb-6 text-base"
-        placeholder="Password"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
+        <TouchableOpacity
+          className={`rounded-2xl py-4 ${loading ? "bg-gray-400" : "bg-blue-600"}`}
+          onPress={handleLogin}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text className="text-white text-center text-lg font-semibold">
+              Login
+            </Text>
+          )}
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        className={`rounded-2xl py-4 ${loading ? "bg-gray-400" : "bg-blue-600"}`}
-        disabled={loading}
-        onPress={handleLogin}
-      >
-        {loading ? (
-          <ActivityIndicator color="white" />
-        ) : (
-          <Text className="text-white text-center text-lg font-semibold">
-            Login
+        <TouchableOpacity onPress={() => router.push("/SignupScreen")} className="mt-5">
+          <Text className="text-blue-600 text-center">
+            Don’t have an account? Sign Up
           </Text>
-        )}
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={() => navigation.navigate("SignupScreen")} className="mt-5">
-        <Text className="text-blue-600 text-center text-base">
-          Don’t have an account? <Text className="font-semibold">Sign Up</Text>
-        </Text>
-      </TouchableOpacity>
-    </View>
+        </TouchableOpacity>
+      </View>
+    </>
   );
 }
