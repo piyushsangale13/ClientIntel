@@ -6,6 +6,13 @@ export default function TabLayout() {
   return (
     <Tabs screenOptions={{ headerTitle: "Client Intel", tabBarActiveTintColor: "#2563EB" }}>
       <Tabs.Screen
+        name="CompanyInfoScreen"
+        options={{
+          title: "Company Info",
+          tabBarIcon: ({ color, size }) => <Ionicons name="business" color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
         name="ChatScreen"
         options={{
           title: "Chat",
