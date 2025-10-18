@@ -4,25 +4,23 @@ const { scrapeWebsite } = require("../utils/webScraper");
 const { fetchCompanyNews } = require("../utils/rssFetcher");
 const CompanyResearch = require("../models/CompanyResearch");
 const TokenUsage = require("../models/TokenUsage");
+const axios = require("axios");
 require("dotenv").config();
 
+// Initialize Azure OpenAI
 const openai = new AzureOpenAI({
   apiKey: process.env.OPEN_AI_API_KEY,
   endpoint: process.env.OPEN_AI_API_ENDPOINT,
   apiVersion: "2025-04-01-preview",
 });
 
-/**
- * Helper: record token usage safely
- * @param {number} tokens
- */
+/* ---------------------- TOKEN USAGE TRACKER ---------------------- */
 async function recordTokenUsage(tokens = 0) {
   try {
     if (!tokens || tokens <= 0) return;
     let usage = await TokenUsage.findOne();
-    if (!usage) {
-      usage = new TokenUsage({ totalTokens: tokens });
-    } else {
+    if (!usage) usage = new TokenUsage({ totalTokens: tokens });
+    else {
       usage.totalTokens += tokens;
       usage.updatedAt = Date.now();
     }
@@ -32,101 +30,104 @@ async function recordTokenUsage(tokens = 0) {
   }
 }
 
-/** Step 1: Get official website via LLM (returns URL string) */
-async function getOfficialWebsite(companyName) {
-  const prompt = `
-I will give you a company name.
-You must return only the company's official website URL (no text, no explanation).
-Company: ${companyName}
-`.trim();
-
-  const result = await openai.chat.completions.create({
-    model: "gpt-5-mini",
-    messages: [{ role: "user", content: prompt }],
-  });
-
-  // record tokens for this call
-  const tokens = result.usage?.total_tokens || 0;
-  await recordTokenUsage(tokens);
-
-  return result.choices[0]?.message?.content?.trim();
-}
-
-/** Step 2: Summarize + extract (primary summary) */
-async function summarizeAndExtract(company, siteContent, newsContent) {
-  const prompt = `
-You are a research assistant creating a brief for an IT sales representative.
-
-Combine and analyze the following information about "${company}".
-Include:
-- A concise company overview (max 250 words)
-- The company’s primary domain (e.g., software, pharma, steel, etc.)
-- Estimated employee size (approximate if not exact)
-- Main office locations (city/country)
-
---- Official Website Content ---
-${siteContent}
-
---- Recent News ---
-${newsContent}
-
-Provide a clear, concise summary.
-`.trim();
-
-  const result = await openai.chat.completions.create({
-    model: "gpt-5-mini",
-    messages: [{ role: "user", content: prompt }],
-  });
-
-  // record tokens for this call
-  const tokens = result.usage?.total_tokens || 0;
-  await recordTokenUsage(tokens);
-
-  return result.choices[0]?.message?.content?.trim() || "";
-}
-
-/** Step 3: Extract structured JSON (domain, employeeSize, locations) */
-async function extractStructuredData(fromText) {
-  const prompt = `
-Extract the following fields from the input text. Return ONLY valid JSON.
-
-Input:
-${fromText}
-
-Return JSON with keys:
-{
-  "companyDomain": "string (e.g., software, pharma, finance, manufacturing)",
-  "employeeSize": "string (e.g., 10-50, 1000+, approx)",
-  "companyLocations": ["City, Country", ...]
-}
-`.trim();
-
-  const result = await openai.chat.completions.create({
-    model: "gpt-5-mini",
-    messages: [{ role: "user", content: prompt }],
-  });
-
-  // record tokens for this call
-  const tokens = result.usage?.total_tokens || 0;
-  await recordTokenUsage(tokens);
-
-  const raw = result.choices[0]?.message?.content || "{}";
+/* ---------------------- GENERIC LLM RUNNER ---------------------- */
+async function runLLM(prompt) {
   try {
-    // The model sometimes returns backticks or extra text; try to extract JSON
-    const firstBrace = raw.indexOf("{");
-    const lastBrace = raw.lastIndexOf("}");
-    const jsonString = firstBrace !== -1 && lastBrace !== -1
-      ? raw.slice(firstBrace, lastBrace + 1)
-      : raw;
+    const result = await openai.chat.completions.create({
+      model: "gpt-5-mini",
+      messages: [{ role: "user", content: prompt }],
+    });
 
-    return JSON.parse(jsonString);
+    const tokens = result.usage?.total_tokens || 0;
+    await recordTokenUsage(tokens);
+
+    return result.choices[0]?.message?.content?.trim() || "";
   } catch (err) {
-    console.warn("Failed to parse structured JSON from LLM response:", err, "raw:", raw);
-    return { companyDomain: "", employeeSize: "", companyLocations: [] };
+    console.error("LLM Error:", err.message);
+    return "";
   }
 }
 
-/** Combined route handler */
+/* ---------------------- STEP 1: FIND OFFICIAL WEBSITE ---------------------- */
+async function getOfficialWebsite(companyName) {
+  const apiKey = process.env.GOOGLE_API_KEY;
+  const cx = process.env.GOOGLE_CSE_ID;
+
+  if (!apiKey || !cx) {
+    console.warn("⚠️ GOOGLE_API_KEY or GOOGLE_CSE_ID missing. Using fallback URL.");
+    return `https://www.${companyName.toLowerCase().replace(/\s+/g, "")}.com`;
+  }
+
+  try {
+    const query = `${companyName} official site`;
+    const url = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${cx}&q=${encodeURIComponent(query)}&num=5`;
+
+    const res = await axios.get(url);
+    const items = res.data.items || [];
+
+    for (let item of items) {
+      const link = item.link;
+      if (link && link.includes(companyName.replace(/\s+/g, "").toLowerCase())) {
+        return link;
+      }
+    }
+
+    return items[0]?.link || `https://www.${companyName.toLowerCase().replace(/\s+/g, "")}.com`;
+  } catch (err) {
+    console.error("Google Search API Error:", err.message);
+    return `https://www.${companyName.toLowerCase().replace(/\s+/g, "")}.com`;
+  }
+}
+
+/* ---------------------- STEP 2: SUMMARIZE + STRUCTURE ---------------------- */
+async function summarizeAndExtract(company, siteContent, newsContent) {
+  const prompt = `
+You are a research assistant preparing a business intelligence brief for an IT sales representative.
+
+Analyze and combine the following information about "${company}".
+Your response must be in **valid JSON** with the structure below:
+
+{
+  "summary": "A concise company overview (max 250 words)",
+  "companyDomain": "string (e.g., software, pharma, finance, manufacturing)",
+  "employeeSize": "string (e.g., 10-50, 1000+, approx)",
+  "companyLocations": ["City, Country", ...],
+  "topInsights": ["3-5 short bullet points highlighting key facts or news"]
+}
+
+--- Official Website Content ---
+${siteContent.slice(0, 8000)}
+
+--- Recent News ---
+${newsContent.slice(0, 4000)}
+`;
+
+  const raw = await runLLM(prompt);
+
+  try {
+    const jsonStr = raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1);
+    const data = JSON.parse(jsonStr);
+
+    return {
+      summary: data.summary || "",
+      companyDomain: data.companyDomain || "",
+      employeeSize: data.employeeSize || "",
+      companyLocations: data.companyLocations || [],
+      topInsights: data.topInsights || [],
+    };
+  } catch (err) {
+    console.warn("⚠️ Failed to parse JSON from LLM:", raw);
+    return {
+      summary: raw || "",
+      companyDomain: "",
+      employeeSize: "",
+      companyLocations: [],
+      topInsights: [],
+    };
+  }
+}
+
+/* ---------------------- MAIN HANDLER ---------------------- */
 const researchCompany = async (req, res) => {
   const { company } = req.body;
   if (!company) return res.status(400).json({ error: "Company name required" });
@@ -134,7 +135,7 @@ const researchCompany = async (req, res) => {
   try {
     const ONE_DAY = 24 * 60 * 60 * 1000;
 
-    // 1) Check cache (24h)
+    // 1️⃣ Check Cache (valid for 24 hours)
     const cached = await CompanyResearch.findOne({ company: new RegExp(`^${company}$`, "i") });
     if (cached && Date.now() - cached.lastUpdated.getTime() < ONE_DAY) {
       console.log("✅ Returning cached result for", company);
@@ -143,34 +144,26 @@ const researchCompany = async (req, res) => {
 
     console.log(`🔍 Researching company: ${company}`);
 
-    // 2) Ask LLM for official website
-    const website = await getOfficialWebsite(company);
-    console.log("🌐 Official Website (LLM):", website);
+    // 2️⃣ Get official website using Google CSE
+    const websiteUrl = await getOfficialWebsite(company);
+    console.log("🌐 Official Website:", websiteUrl);
 
-    // If LLM didn't return a usable URL, fallback to constructed URL
-    let websiteUrl = website;
-    if (!websiteUrl || !/^https?:\/\//i.test(websiteUrl)) {
-      websiteUrl = `https://www.${company.toLowerCase().replace(/\s+/g, "")}.com`;
-      console.log("Using fallback websiteUrl:", websiteUrl);
-    }
-
-    // 3) Scrape website content
+    // 3️⃣ Scrape website data
     const siteContent = await scrapeWebsite(websiteUrl);
 
-    // 4) Fetch news
-    const news = await fetchCompanyNews(company); // array of {title, link, pubDate}
-    const newsContent = Array.isArray(news) ? news.map(n => `${n.title} (${n.pubDate}) - ${n.link}`).join("\n") : "";
+    // 4️⃣ Fetch recent news
+    const news = await fetchCompanyNews(company);
+    const newsContent = Array.isArray(news)
+      ? news.map((n) => `${n.title} (${n.pubDate}) - ${n.link}`).join("\n")
+      : "";
 
-    // 5) Summarize & extract overview (primary LLM pass)
-    const summaryText = await summarizeAndExtract(company, siteContent, newsContent);
+    // 5️⃣ Get summary + structured data in single LLM call
+    const extracted = await summarizeAndExtract(company, siteContent, newsContent);
 
-    // 6) Structured extraction (domain, sizes, locations)
-    const structured = await extractStructuredData(summaryText);
-
-    // 7) Prepare top 3 news
+    // 6️⃣ Save only top 3 news
     const topNews = Array.isArray(news) ? news.slice(0, 3) : [];
 
-    // 8) Save / update cache
+    // 7️⃣ Update or insert into cache
     const updated = await CompanyResearch.findOneAndUpdate(
       { company },
       {
@@ -178,29 +171,30 @@ const researchCompany = async (req, res) => {
         websiteUrl,
         websiteText: siteContent,
         news,
-        summary: summaryText,
+        summary: extracted.summary,
         topNews,
-        companyDomain: structured.companyDomain || "",
-        employeeSize: structured.employeeSize || "",
-        companyLocations: structured.companyLocations || [],
+        companyDomain: extracted.companyDomain,
+        employeeSize: extracted.employeeSize,
+        companyLocations: extracted.companyLocations,
         lastUpdated: new Date(),
       },
       { upsert: true, new: true }
     );
 
-    // 9) Response
+    // 8️⃣ Final response
     return res.status(200).json({
       company,
       officialWebsite: websiteUrl,
-      summary: summaryText,
+      summary: extracted.summary,
       topNews,
-      companyDomain: structured.companyDomain || "",
-      employeeSize: structured.employeeSize || "",
-      companyLocations: structured.companyLocations || [],
+      companyDomain: extracted.companyDomain,
+      employeeSize: extracted.employeeSize,
+      companyLocations: extracted.companyLocations,
+      topInsights: extracted.topInsights,
       cached: false,
     });
   } catch (err) {
-    console.error("Error in researchCompany:", err);
+    console.error("❌ Error in researchCompany:", err);
     return res.status(500).json({ error: "Research failed" });
   }
 };

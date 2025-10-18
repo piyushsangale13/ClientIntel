@@ -8,14 +8,16 @@ const openai = new AzureOpenAI({
   apiVersion: '2025-04-01-preview',
 });
 
+let conversationHistory = [];
+
 const getResponse = async (req, res) => {
   const { prompt } = req.body;
-  console.log('Prompt:', prompt);
 
+  conversationHistory.push({ role: 'user', content: prompt });
   try {
     const result = await openai.chat.completions.create({
       model: 'gpt-5-mini',
-      messages: [{ role: 'user', content: prompt }],
+      messages: conversationHistory,
     });
 
     const tokenUsed = result.usage?.total_tokens || 0;
@@ -31,7 +33,11 @@ const getResponse = async (req, res) => {
 
     await usage.save();
 
-    res.status(200).json(result.choices[0]?.message?.content || 'No reply');
+    const botResponse = result.choices[0]?.message?.content || 'No reply';
+    conversationHistory.push({ role: 'assistant', content: botResponse });
+
+    res.status(200).json(botResponse);
+
   } catch (err) {
     console.error('OpenAI error:', err);
     res.status(500).json({ message: 'Error connecting to OpenAI' });
