@@ -9,6 +9,14 @@ export default function RootLayout() {
       <Stack.Screen name="LoginScreen" />
       <Stack.Screen name="SignupScreen" />
       <Stack.Screen name="(tabs)" />
+      {/* <Stack.Screen
+        name="ChatScreen"
+        options={{
+          title: "Chat",
+          headerBackTitle: "Back",
+          headerShown: true,
+        }}
+      /> */}
     </Stack>
   );
 }

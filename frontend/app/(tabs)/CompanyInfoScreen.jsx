@@ -15,6 +15,7 @@ import UserAuthenticated from "../UserAuthenticated";
 import axios from "axios";
 import config from "../config";
 import { authHeader } from "../utils/Auth";
+import { useNavigation, router } from "expo-router";
 
 const API_URL = `${config.BACKEND_API_URL}/api/llm`;
 
@@ -23,6 +24,7 @@ export default function CompanyInfoScreen() {
     const [loading, setLoading] = useState(false);
     const [companyData, setCompanyData] = useState(null);
     const [error, setError] = useState("");
+    const navigation = useNavigation();
 
     const fetchCompany = async () => {
         if (!companyName.trim()) return;
@@ -45,13 +47,14 @@ export default function CompanyInfoScreen() {
             setLoading(false);
         }
     };
-
+    const handleButtonClick = () => {
+        navigation.navigate("ChatScreen", { companyData });
+    };
     return (
         <>
             <UserAuthenticated />
+            <StatusBar style="dark" />
             <SafeAreaView className="flex-1 bg-gray-100">
-                <StatusBar style="dark" />
-
                 <ScrollView className="px-5 pt-8 flex-1">
                     <Text className="text-2xl font-bold text-center mb-6">Search any company at your fingertips</Text>
 
@@ -115,6 +118,12 @@ export default function CompanyInfoScreen() {
                                 ) : (
                                     <Text className="text-gray-500">No news available</Text>
                                 )}
+                                <TouchableOpacity
+                                    onPress={handleButtonClick}
+                                    className="bg-blue-500 py-3 rounded-xl mb-6"
+                                    >
+                                    <Text className="text-center text-white text-lg font-semibold">Need more information?</Text>
+                                    </TouchableOpacity>
                             </View>
                         )}
                     </KeyboardAvoidingView>

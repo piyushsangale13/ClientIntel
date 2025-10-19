@@ -26,7 +26,7 @@ export default function LoginScreen() {
       const res = await login(email, password);
       if (res?.status) {
         Alert.alert("Success", "Login successful!");
-        router.replace("/(tabs)/ProfileScreen");
+        router.replace("/(tabs)/CompanyInfoScreen");
       } else {
         Alert.alert("Error", res?.message || "Invalid credentials");
       }

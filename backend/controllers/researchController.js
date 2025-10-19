@@ -185,6 +185,8 @@ const researchCompany = async (req, res) => {
     return res.status(200).json({
       company,
       officialWebsite: websiteUrl,
+      news,
+      websiteText: siteContent,
       summary: extracted.summary,
       topNews,
       companyDomain: extracted.companyDomain,
