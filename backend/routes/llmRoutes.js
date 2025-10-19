@@ -1,10 +1,10 @@
 const express = require('express');
 const { getResponse } = require('../controllers/getResponseController');
+const {researchCompany} = require('../controllers/researchController');
 const TokenUsage = require('../models/TokenUsage');
 
 const router = express.Router();
 const axios = require('axios');
-const {researchCompany} = require('../controllers/researchController');
 
 router.post('/prompt', getResponse);
 

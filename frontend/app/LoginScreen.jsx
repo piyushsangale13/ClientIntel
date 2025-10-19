@@ -54,6 +54,7 @@ export default function LoginScreen() {
           className="border border-gray-300 rounded-2xl px-4 py-3 mb-4"
           placeholder="Email"
           placeholderTextColor={placeholderColor}
+          color="black"
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"
@@ -64,6 +65,7 @@ export default function LoginScreen() {
             placeholder="Password"
             placeholderTextColor={placeholderColor}
             secureTextEntry={!showPassword}
+            color="black"
             value={password}
             onChangeText={setPassword}
           />
@@ -74,7 +76,7 @@ export default function LoginScreen() {
             <Ionicons
               name={showPassword ? "eye-off" : "eye"}
               size={24}
-              color={isDark ? "#F9FAFB" : "#6B7280"}
+              color={placeholderColor}
             />
           </TouchableOpacity>
         </View>

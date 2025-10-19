@@ -143,6 +143,7 @@ User's question: ${input}
               className="flex-1 border border-gray-300 rounded-2xl px-3 py-2 mr-2"
               placeholder="Type a message..."
               placeholderTextColor={placeholderColor}
+              color="black"
               value={input}
               onChangeText={setInput}
             />

@@ -63,6 +63,7 @@ export default function ChangePasswordScreen() {
                         className="bg-white p-3 rounded-xl mb-3 border border-gray-300"
                         placeholder="Old Password"
                         placeholderTextColor={placeholderColor}
+                        color="black"
                         secureTextEntry={!showPasswordOld}
                         value={oldPassword}
                         onChangeText={setOldPassword}
@@ -74,7 +75,7 @@ export default function ChangePasswordScreen() {
                     <Ionicons
                         name={showPasswordOld ? "eye-off" : "eye"}
                         size={24}
-                        color={isDark ? "#F9FAFB" : "#6B7280"}
+                        color={placeholderColor}
                     />
                     </TouchableOpacity>
                 </View>
@@ -83,6 +84,7 @@ export default function ChangePasswordScreen() {
                         className="bg-white p-3 rounded-xl mb-3 border border-gray-300"
                         placeholder="New Password"
                         placeholderTextColor={placeholderColor}
+                        color="black"
                         secureTextEntry={!showPasswordNew}
                         value={newPassword}
                         onChangeText={setNewPassword}
@@ -94,7 +96,7 @@ export default function ChangePasswordScreen() {
                     <Ionicons
                         name={showPasswordNew ? "eye-off" : "eye"}
                         size={24}
-                        color={isDark ? "#F9FAFB" : "#6B7280"}
+                        color={placeholderColor}
                     />
                     </TouchableOpacity>
                 </View>
@@ -103,6 +105,7 @@ export default function ChangePasswordScreen() {
                         className="bg-white p-3 rounded-xl mb-6 border border-gray-300"
                         placeholder="Confirm New Password"
                         placeholderTextColor={placeholderColor}
+                        color="black"
                         secureTextEntry={!showPasswordConfirm}
                         value={confirmPassword}
                         onChangeText={setConfirmPassword}
@@ -114,7 +117,7 @@ export default function ChangePasswordScreen() {
                     <Ionicons
                         name={showPasswordConfirm ? "eye-off" : "eye"}
                         size={24}
-                        color={isDark ? "#F9FAFB" : "#6B7280"}
+                        color={placeholderColor}
                     />
                     </TouchableOpacity>
                 </View>

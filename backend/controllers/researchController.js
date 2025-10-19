@@ -1,4 +1,3 @@
-// controllers/researchController.js
 const { AzureOpenAI } = require("openai");
 const { scrapeWebsite } = require("../utils/webScraper");
 const { fetchCompanyNews } = require("../utils/rssFetcher");
@@ -7,14 +6,12 @@ const TokenUsage = require("../models/TokenUsage");
 const axios = require("axios");
 require("dotenv").config();
 
-// Initialize Azure OpenAI
 const openai = new AzureOpenAI({
   apiKey: process.env.OPEN_AI_API_KEY,
   endpoint: process.env.OPEN_AI_API_ENDPOINT,
   apiVersion: "2025-04-01-preview",
 });
 
-/* ---------------------- TOKEN USAGE TRACKER ---------------------- */
 async function recordTokenUsage(tokens = 0) {
   try {
     if (!tokens || tokens <= 0) return;
@@ -30,7 +27,6 @@ async function recordTokenUsage(tokens = 0) {
   }
 }
 
-/* ---------------------- GENERIC LLM RUNNER ---------------------- */
 async function runLLM(prompt) {
   try {
     const result = await openai.chat.completions.create({
@@ -48,7 +44,6 @@ async function runLLM(prompt) {
   }
 }
 
-/* ---------------------- STEP 1: FIND OFFICIAL WEBSITE ---------------------- */
 async function getOfficialWebsite(companyName) {
   const apiKey = process.env.GOOGLE_API_KEY;
   const cx = process.env.GOOGLE_CSE_ID;
@@ -79,7 +74,6 @@ async function getOfficialWebsite(companyName) {
   }
 }
 
-/* ---------------------- STEP 2: SUMMARIZE + STRUCTURE ---------------------- */
 async function summarizeAndExtract(company, siteContent, newsContent) {
   const prompt = `
 You are a research assistant preparing a business intelligence brief for an IT sales representative.
@@ -127,7 +121,6 @@ ${newsContent.slice(0, 4000)}
   }
 }
 
-/* ---------------------- MAIN HANDLER ---------------------- */
 const researchCompany = async (req, res) => {
   const { company } = req.body;
   if (!company) return res.status(400).json({ error: "Company name required" });
@@ -135,7 +128,6 @@ const researchCompany = async (req, res) => {
   try {
     const ONE_DAY = 24 * 60 * 60 * 1000;
 
-    // 1️⃣ Check Cache (valid for 24 hours)
     const cached = await CompanyResearch.findOne({ company: new RegExp(`^${company}$`, "i") });
     if (cached && Date.now() - cached.lastUpdated.getTime() < ONE_DAY) {
       console.log("✅ Returning cached result for", company);
@@ -144,26 +136,20 @@ const researchCompany = async (req, res) => {
 
     console.log(`🔍 Researching company: ${company}`);
 
-    // 2️⃣ Get official website using Google CSE
     const websiteUrl = await getOfficialWebsite(company);
     console.log("🌐 Official Website:", websiteUrl);
 
-    // 3️⃣ Scrape website data
     const siteContent = await scrapeWebsite(websiteUrl);
 
-    // 4️⃣ Fetch recent news
     const news = await fetchCompanyNews(company);
     const newsContent = Array.isArray(news)
       ? news.map((n) => `${n.title} (${n.pubDate}) - ${n.link}`).join("\n")
       : "";
 
-    // 5️⃣ Get summary + structured data in single LLM call
     const extracted = await summarizeAndExtract(company, siteContent, newsContent);
 
-    // 6️⃣ Save only top 3 news
     const topNews = Array.isArray(news) ? news.slice(0, 3) : [];
 
-    // 7️⃣ Update or insert into cache
     const updated = await CompanyResearch.findOneAndUpdate(
       { company },
       {
@@ -181,7 +167,6 @@ const researchCompany = async (req, res) => {
       { upsert: true, new: true }
     );
 
-    // 8️⃣ Final response
     return res.status(200).json({
       company,
       officialWebsite: websiteUrl,

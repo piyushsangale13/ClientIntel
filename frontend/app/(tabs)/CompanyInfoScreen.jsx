@@ -67,6 +67,7 @@ export default function CompanyInfoScreen() {
                             className="bg-white px-4 py-3 rounded-xl border border-gray-300 mb-4 text-gray-800"
                             placeholder="Enter Company Name"
                             placeholderTextColor={placeholderColor}
+                            color="black"
                             value={companyName}
                             onChangeText={setCompanyName}
                         />

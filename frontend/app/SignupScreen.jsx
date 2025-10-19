@@ -55,6 +55,7 @@ export default function SignupScreen() {
           className="border border-gray-300 rounded-2xl px-4 py-3 mb-4"
           placeholder="First Name"
           placeholderTextColor={placeholderColor}
+          color="black"
           value={firstName}
           onChangeText={setFirstName}
         />
@@ -62,6 +63,7 @@ export default function SignupScreen() {
           className="border border-gray-300 rounded-2xl px-4 py-3 mb-4"
           placeholder="Last Name"
           placeholderTextColor={placeholderColor}
+          color="black"
           value={lastName}
           onChangeText={setLastName}
         />
@@ -69,6 +71,7 @@ export default function SignupScreen() {
           className="border border-gray-300 rounded-2xl px-4 py-3 mb-4"
           placeholder="Email"
           placeholderTextColor={placeholderColor}
+          color="black"
           value={email}
           onChangeText={setEmail}
         />
@@ -78,6 +81,7 @@ export default function SignupScreen() {
             placeholder="Password"
             placeholderTextColor={placeholderColor}
             secureTextEntry={!showPassword}
+            color="black"
             value={password}
             onChangeText={setPassword}
           />
@@ -88,7 +92,7 @@ export default function SignupScreen() {
             <Ionicons
               name={showPassword ? "eye-off" : "eye"}
               size={24}
-              color={isDark ? "#F9FAFB" : "#6B7280"}
+              color={placeholderColor}
             />
           </TouchableOpacity>
         </View>
