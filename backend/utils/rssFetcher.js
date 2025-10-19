@@ -6,7 +6,7 @@ async function fetchCompanyNews(companyName) {
     const feed = await parser.parseURL(
       `https://news.google.com/rss/search?q=${encodeURIComponent(companyName)}&hl=en-IN&gl=IN&ceid=IN:en`
     );
-
+    console.log(feed);
     // Return array of objects instead of string
     const news = feed.items.slice(0, 5).map(item => ({
       title: item.title || 'No title',
@@ -14,7 +14,7 @@ async function fetchCompanyNews(companyName) {
       pubDate: item.pubDate || ''
     }));
 
-    return news; // array of {title, link, pubDate}
+    return news;
   } catch (err) {
     console.error('RSS error:', err.message);
     return []; // return empty array on error

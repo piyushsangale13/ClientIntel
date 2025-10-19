@@ -28,7 +28,7 @@ export default function SignupScreen() {
       const res = await signup(firstName, lastName, email, password);
       if (res?.status) {
         Alert.alert("Success", "Account created!");
-        router.replace("/(tabs)/ProfileScreen");
+        router.replace("/(tabs)/CompanyInfoScreen");
       } else {
         Alert.alert("Error", res?.message || "Signup failed");
       }
