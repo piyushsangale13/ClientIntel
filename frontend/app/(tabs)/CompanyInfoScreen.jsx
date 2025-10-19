@@ -8,6 +8,7 @@ import {
     ActivityIndicator,
     Linking,
     KeyboardAvoidingView,
+    useColorScheme,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -20,6 +21,8 @@ import { useNavigation, router } from "expo-router";
 const API_URL = `${config.BACKEND_API_URL}/api/llm`;
 
 export default function CompanyInfoScreen() {
+    const colorScheme = useColorScheme();
+    const isDark = colorScheme === "dark";
     const [companyName, setCompanyName] = useState("");
     const [loading, setLoading] = useState(false);
     const [companyData, setCompanyData] = useState(null);
@@ -50,6 +53,7 @@ export default function CompanyInfoScreen() {
     const handleButtonClick = () => {
         navigation.navigate("ChatScreen", { companyData });
     };
+    const placeholderColor = isDark ? "#9CA3AF" : "#6B7280";
     return (
         <>
             <UserAuthenticated />
@@ -62,6 +66,7 @@ export default function CompanyInfoScreen() {
                         <TextInput
                             className="bg-white px-4 py-3 rounded-xl border border-gray-300 mb-4 text-gray-800"
                             placeholder="Enter Company Name"
+                            placeholderTextColor={placeholderColor}
                             value={companyName}
                             onChangeText={setCompanyName}
                         />

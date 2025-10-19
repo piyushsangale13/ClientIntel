@@ -6,14 +6,21 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  useColorScheme,
 } from "react-native";
 import { router } from "expo-router";
 import { login } from "./utils/Auth";
 import { StatusBar } from 'expo-status-bar';
+import { Ionicons } from '@expo/vector-icons';
+
 export default function LoginScreen() {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -36,7 +43,7 @@ export default function LoginScreen() {
       setLoading(false);
     }
   };
-
+  const placeholderColor = isDark ? "#9CA3AF" : "#6B7280";
   return (
     <>
       <StatusBar style="dark" />
@@ -46,17 +53,31 @@ export default function LoginScreen() {
         <TextInput
           className="border border-gray-300 rounded-2xl px-4 py-3 mb-4"
           placeholder="Email"
+          placeholderTextColor={placeholderColor}
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"
         />
-        <TextInput
-          className="border border-gray-300 rounded-2xl px-4 py-3 mb-6"
-          placeholder="Password"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
+        <View className="relative mb-6">
+          <TextInput
+            className="border border-gray-300 rounded-2xl px-4 py-3 mb-6"
+            placeholder="Password"
+            placeholderTextColor={placeholderColor}
+            secureTextEntry={!showPassword}
+            value={password}
+            onChangeText={setPassword}
+          />
+          <TouchableOpacity
+            className="absolute right-4 top-2"
+            onPress={() => setShowPassword(!showPassword)}
+          >
+            <Ionicons
+              name={showPassword ? "eye-off" : "eye"}
+              size={24}
+              color={isDark ? "#F9FAFB" : "#6B7280"}
+            />
+          </TouchableOpacity>
+        </View>
 
         <TouchableOpacity
           className={`rounded-2xl py-4 ${loading ? "bg-gray-400" : "bg-blue-600"}`}
