@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  useColorScheme,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useNavigation, useRoute } from "@react-navigation/native";
@@ -22,6 +23,8 @@ const API_URL = `${config.BACKEND_API_URL}/api/llm`;
 
 export default function ChatScreen() {
   const navigation = useNavigation();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
   const route = useRoute();
   const { companyData } = route.params || {};
 
@@ -101,7 +104,7 @@ User's question: ${input}
       setLoading(false);
     }
   };
-
+  const placeholderColor = isDark ? "#9CA3AF" : "#6B7280";
   return (
     <>
       <UserAuthenticated />
@@ -139,6 +142,8 @@ User's question: ${input}
             <TextInput
               className="flex-1 border border-gray-300 rounded-2xl px-3 py-2 mr-2"
               placeholder="Type a message..."
+              placeholderTextColor={placeholderColor}
+              color="black"
               value={input}
               onChangeText={setInput}
             />

@@ -15,7 +15,19 @@ export default function TabLayout() {
       <Tabs.Screen
         name="ChatScreen"
         options={{
-          href: null, // 👈 hides it from tab bar
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="ChangePasswordScreen"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="AboutScreen"
+        options={{
+          href: null,
         }}
       />
       <Tabs.Screen

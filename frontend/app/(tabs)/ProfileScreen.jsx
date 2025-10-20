@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { getTokenInfo, logout } from "../utils/Auth";
-import UserAuthenticated from "../UserAuthenticated"
-import { StatusBar } from 'expo-status-bar';
+import UserAuthenticated from "../UserAuthenticated";
+import { StatusBar } from "expo-status-bar";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function ProfileScreen() {
   const navigation = useNavigation();
@@ -26,45 +27,57 @@ export default function ProfileScreen() {
     navigation.navigate("ChangePasswordScreen");
   };
 
+  const handleAbout = () => {
+    navigation.navigate("AboutScreen");
+  };
+  
   return (
     <>
       <StatusBar style="dark" />
       <UserAuthenticated />
-      <ScrollView className="flex-1 bg-gray-100 px-5 pt-10">
-        <Text className="text-2xl font-bold text-center mb-8">Profile</Text>
-
-        {user ? (
-          <View className="space-y-4 mb-8">
-            <Text className="text-lg">
-              <Text className="font-semibold">First Name: </Text>
-              {user.firstName || "-"}
-            </Text>
-            <Text className="text-lg">
-              <Text className="font-semibold">Last Name: </Text>
-              {user.lastName || "-"}
-            </Text>
-            <Text className="text-lg">
-              <Text className="font-semibold">Email: </Text>
-              {user.email}
-            </Text>
+      <ScrollView className="flex-1 bg-white px-6 pt-10">
+        <View className="items-center mb-8">
+          {/* Avatar */}
+          <View className="w-28 h-28 bg-blue-100 rounded-full items-center justify-center mb-4">
+            <Ionicons name="person" size={70} color="#2563EB" />
           </View>
-        ) : (
-          <Text className="text-center text-gray-500 mb-8">Loading user info...</Text>
-        )}
 
-        <TouchableOpacity
-          onPress={handleChangePassword}
-          className="bg-blue-500 py-3 rounded-xl mb-6"
-        >
-          <Text className="text-center text-white text-lg font-semibold">Change Password</Text>
-        </TouchableOpacity>
+          {/* Name and Email */}
+          <Text className="text-2xl font-bold text-gray-800 mb-1">
+            {user ? `${user.firstName || ""} ${user.lastName || ""}` : "Loading..."}
+          </Text>
+          <Text className="text-gray-500 mb-6">{user?.email || ""}</Text>
+        </View>
 
-        <TouchableOpacity
-          onPress={handleLogout}
-          className="bg-red-500 py-3 rounded-xl mb-6"
-        >
-          <Text className="text-center text-white text-lg font-semibold">Logout</Text>
-        </TouchableOpacity>
+        {/* Options */}
+        <View className="space-y-4 gap-y-4">
+          <TouchableOpacity
+            onPress={handleAbout}
+            className="bg-gray-100 py-3 rounded-2xl border border-gray-300 shadow-sm"
+          >
+            <Text className="text-center text-gray-800 font-semibold text-lg">
+              About
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={handleChangePassword}
+            className="bg-blue-600 py-3 rounded-2xl shadow-md"
+          >
+            <Text className="text-center text-white font-semibold text-lg">
+              Change Password
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={handleLogout}
+            className="bg-red-500 py-3 rounded-2xl shadow-md"
+          >
+            <Text className="text-center text-white font-semibold text-lg">
+              Logout
+            </Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </>
   );
