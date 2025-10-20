@@ -139,11 +139,11 @@ const researchCompany = async (req, res) => {
 
     console.log(`🔍 Researching company: ${company}`);
 
-    const websiteUrl = await getOfficialWebsite(company);
-    // console.log("🌐 Official Website:", websiteUrl);
+    const officialWebsite = await getOfficialWebsite(company);
+    // console.log("🌐 Official Website:", officialWebsite);
     const wikipediaUrl = await getOfficialWebsite(`Wikipedia:${company}`);
     // console.log("🌐 Wikipedia Website:", wikipediaUrl);
-    const siteContent = await scrapeWebsite(websiteUrl);
+    const siteContent = await scrapeWebsite(officialWebsite);
     const wikipediaContent = await scrapeWebsite(wikipediaUrl);
     // console.log(wikipediaContent);
     const news = await fetchCompanyNews(company);
@@ -159,7 +159,7 @@ const researchCompany = async (req, res) => {
       { company },
       {
         company,
-        websiteUrl,
+        officialWebsite,
         websiteText: siteContent,
         news,
         summary: extracted.summary,
@@ -174,7 +174,7 @@ const researchCompany = async (req, res) => {
 
     return res.status(200).json({
       company,
-      officialWebsite: websiteUrl,
+      officialWebsite: officialWebsite,
       news,
       websiteText: siteContent,
       summary: extracted.summary,
