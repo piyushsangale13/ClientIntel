@@ -74,7 +74,7 @@ async function getOfficialWebsite(companyName) {
   }
 }
 
-async function summarizeAndExtract(company, siteContent, newsContent) {
+async function summarizeAndExtract(company, siteContent, wikipediaContent, newsContent) {
   const prompt = `
 You are a research assistant preparing a business intelligence brief for an IT sales representative.
 
@@ -82,7 +82,7 @@ Analyze and combine the following information about "${company}".
 Your response must be in **valid JSON** with the structure below:
 
 {
-  "summary": "A concise company overview (max 250 words)",
+  "summary": "A concise, detailed company overview (max 500 words)",
   "companyDomain": "string (e.g., software, pharma, finance, manufacturing)",
   "employeeSize": "string (e.g., 10-50, 1000+, approx)",
   "companyLocations": ["City, Country", ...],
@@ -91,6 +91,9 @@ Your response must be in **valid JSON** with the structure below:
 
 --- Official Website Content ---
 ${siteContent.slice(0, 8000)}
+
+--- Wikipedia Content ---
+${wikipediaContent.slice(0, 8000)}
 
 --- Recent News ---
 ${newsContent.slice(0, 4000)}
@@ -137,16 +140,18 @@ const researchCompany = async (req, res) => {
     console.log(`🔍 Researching company: ${company}`);
 
     const websiteUrl = await getOfficialWebsite(company);
-    console.log("🌐 Official Website:", websiteUrl);
-
+    // console.log("🌐 Official Website:", websiteUrl);
+    const wikipediaUrl = await getOfficialWebsite(`Wikipedia:${company}`);
+    // console.log("🌐 Wikipedia Website:", wikipediaUrl);
     const siteContent = await scrapeWebsite(websiteUrl);
-
+    const wikipediaContent = await scrapeWebsite(wikipediaUrl);
+    // console.log(wikipediaContent);
     const news = await fetchCompanyNews(company);
     const newsContent = Array.isArray(news)
       ? news.map((n) => `${n.title} (${n.pubDate}) - ${n.link}`).join("\n")
       : "";
 
-    const extracted = await summarizeAndExtract(company, siteContent, newsContent);
+    const extracted = await summarizeAndExtract(company, siteContent, wikipediaContent, newsContent);
 
     const topNews = Array.isArray(news) ? news.slice(0, 3) : [];
 
