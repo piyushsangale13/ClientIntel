@@ -1,12 +1,12 @@
 version: "3.9"
 
 services:
-  backend2:
+  backend:
     build:
-      context: ./backend2
-    container_name: clientintel-backend2
+      context: ./backend
+    container_name: clientintel-backend
     env_file:
-      - ./backend2/.env
+      - ./backend/.env
     ports:
       - "8000:8000"
     depends_on:
